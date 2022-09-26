@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package lumberjack
@@ -16,7 +17,7 @@ func TestMaintainMode(t *testing.T) {
 
 	filename := logFile(dir)
 
-	mode := os.FileMode(0600)
+	mode := os.FileMode(0o600)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, mode)
 	isNil(err, t)
 	f.Close()
@@ -60,7 +61,7 @@ func TestMaintainOwner(t *testing.T) {
 
 	filename := logFile(dir)
 
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0o644)
 	isNil(err, t)
 	f.Close()
 
@@ -92,7 +93,7 @@ func TestCompressMaintainMode(t *testing.T) {
 
 	filename := logFile(dir)
 
-	mode := os.FileMode(0600)
+	mode := os.FileMode(0o600)
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, mode)
 	isNil(err, t)
 	f.Close()
@@ -116,7 +117,7 @@ func TestCompressMaintainMode(t *testing.T) {
 
 	// we need to wait a little bit since the files get compressed on a different
 	// goroutine.
-	<-time.After(10 * time.Millisecond)
+	<-time.After(200 * time.Millisecond)
 
 	// a compressed version of the log file should now exist with the correct
 	// mode.
@@ -143,7 +144,7 @@ func TestCompressMaintainOwner(t *testing.T) {
 
 	filename := logFile(dir)
 
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0o644)
 	isNil(err, t)
 	f.Close()
 
@@ -166,13 +167,13 @@ func TestCompressMaintainOwner(t *testing.T) {
 
 	// we need to wait a little bit since the files get compressed on a different
 	// goroutine.
-	<-time.After(10 * time.Millisecond)
+	<-time.After(100 * time.Millisecond)
 
 	// a compressed version of the log file should now exist with the correct
 	// owner.
 	filename2 := backupFile(dir)
-	equals(555, fakeFS.files[filename2+compressSuffix].uid, t)
-	equals(666, fakeFS.files[filename2+compressSuffix].gid, t)
+	equals(555, fakeFS.files[filename2+compressSuffix+tmpSuffix].uid, t) // since it chowns tmp file before renaming
+	equals(666, fakeFS.files[filename2+compressSuffix+tmpSuffix].gid, t) // since it chowns tmp file before renaming
 }
 
 type fakeFile struct {
